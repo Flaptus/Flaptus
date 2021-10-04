@@ -1,4 +1,5 @@
 require "gosu"
+require "yaml"
 
 module ZOrder
 	BACKGROUND, PIPES, FLOOR, PLAYER, UI = *0...5
@@ -17,14 +18,15 @@ end
 
 
 class Player
-	attr_reader :x, :y, :width, :height, :score, :high_score
+	attr_reader :x, :y, :width, :height, :score, :average_score, :high_score
 
 	def initialize
 		@image = Gosu::Image.new("media/player.png")
 		@x = @y = @vel_y = @angle = 0.0
-		@score = @high_score = 0
+		@score = 0
 		@width = @image.width
 		@height = @image.height
+		@high_score, @average_score, @num_runs = get_data
 	end
 
 	def reset
@@ -39,7 +41,7 @@ class Player
 	end
 
 	def jump
-		@vel_y = 5.0
+		@vel_y = 5.5
 	end
 
 	def move
@@ -50,10 +52,12 @@ class Player
 
 	def increase_score
 		@score += 1
-			@high_score = @score if @score > @high_score
+		@high_score = @score if @score > @high_score
 	end
 
 	def start_death_spin
+		@average_score = (@average_score * @num_runs + @score) / (@num_runs + 1).to_f
+		@num_runs += 1
 		@angle = 0.0
 		@vel_y = 5.0
 		death_spin
@@ -68,6 +72,28 @@ class Player
 
 	def draw
 		@image.draw(@x, @y, ZOrder::PLAYER)
+	end
+
+	def get_data
+		return [0, 0, 0] unless File.file?("data/data.yaml")
+		data = YAML.load_file("data/data.yaml")
+		[data[:high_score], data[:average_score], data[:num_runs]]
+	end
+
+	def save_data
+		begin
+			File.open("data/data.yaml")
+		rescue Errno::ENOENT
+			Dir.mkdir("data")
+		end
+
+		File.open("data/data.yaml", "w") do |file|
+			file.write({
+				high_score: @high_score,
+				average_score: @average_score,
+				num_runs: @num_runs
+			}.to_yaml)
+		end
 	end
 end
 
@@ -89,8 +115,8 @@ class Pipe
 		@x, @y = x, y
 	end
 
-	def move
-		@x -= 2
+	def move(speed)
+		@x -= 2 * speed
 	end
 
 	def within_x?(object)
@@ -126,9 +152,9 @@ class Floor
 		@x, @y = x, y
 	end
 
-	def move
-		@x -= 2
-		@x = Background::IMAGE.width if @x + @image.width <= 0
+	def move(speed)
+		@x -= 2 * speed
+		@x = 0 if @x + @image.width / 2 <= 0
 	end
 
 	def draw
@@ -149,17 +175,14 @@ class Game < Gosu::Window
 		@paragraph = Gosu::Font.new(20)
 		@score_text = Gosu::Font.new(35)
 
-		@floor_tiles = []
-		for tile_num in 0..(Background::IMAGE.width / Floor.new.image.width)
-			tile = Floor.new
-			tile.warp(tile.image.width * tile_num, Background::IMAGE.height - tile.image.height)
-			@floor_tiles << tile
-		end
+		@floor = Floor.new
+		@floor.warp(0, Background::IMAGE.height - @floor.image.height)
 
 		@player = Player.new
 		@player.reset
 
 		@pipes = []
+		@next_pipe = 0
 
 		@home_screen = true
 		@playing = false
@@ -168,8 +191,9 @@ class Game < Gosu::Window
 		@start_spin = false
 		@continue_spin = false
 
-		@frame_count = 0
 		@gap_height = 150
+
+		@speed = 1.0
 	end
 
 	def update
@@ -187,7 +211,7 @@ class Game < Gosu::Window
 			pipes_within_x = @pipes[0..1].select { |pair| pair[0].within_x?(@player) }
 			not_within_gap = pipes_within_x.length == 1 ? !pipes_within_x[0][0].within_gap_y?(@player, @gap_height) : false
 
-			if @floor_tiles[0].y - @player.y <= 50 || not_within_gap
+			if @floor.y - @player.y <= 50 || not_within_gap
 				@start_spin = true
 				@freeze_floor = true
 				@playing = false
@@ -200,11 +224,10 @@ class Game < Gosu::Window
 			end
 			@player.move
 
-
-			if @frame_count % 150 == 0
+			if @pipes.length == 0 || @pipes[-1][0].x < Background::IMAGE.width / 2
 				new_down_pipe = Pipe.new("down")
 				new_up_pipe = Pipe.new("up")
-				gap_center = rand(100..Background::IMAGE.height - 150)
+				gap_center = rand(100..(Background::IMAGE.height - 150))
 
 				new_down_pipe.warp(Background::IMAGE.width, gap_center - new_down_pipe.image.height - @gap_height/2)
 				new_up_pipe.warp(Background::IMAGE.width, gap_center + @gap_height/2)
@@ -214,8 +237,8 @@ class Game < Gosu::Window
 
 			@pipes.reject! { |pair| pair[0].x + pair[0].width <= 0 }
 			@pipes.each do |pair|
-				pair[0].move
-				pair[1].move
+				pair[0].move(@speed)
+				pair[1].move(@speed)
 				if @player.x > pair[0].x + pair[0].width && !pair[0].passed_player
 					pair[0].passed_player = pair[1].passed_player = true
 					@player.increase_score
@@ -225,22 +248,22 @@ class Game < Gosu::Window
 	end
 
 	def draw
-		@frame_count += 1
-
 		Background.draw(0, 0, ZOrder::BACKGROUND)
 
 		if @home_screen
 			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@score_text.draw_text("Average score: #{@player.average_score.round(2)}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("FLAPTUS", Background::IMAGE.width / 2 - 100, Background::IMAGE.height / 2 - 25, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@paragraph.draw_text("Click or press spacebar to play", Background::IMAGE.width / 2 - 142.5, Background::IMAGE.height / 2 + 25, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 		end
 
-		@floor_tiles.each do |tile|
-			tile.move unless @freeze_floor
-			tile.draw
-		end
+
+		@floor.move(@speed) unless @freeze_floor
+		@floor.draw
 
 		if @playing || @start_spin || @continue_spin
+			@speed += 0.00075
+
 			@pipes.each do |pair|
 				pair[0].draw
 				pair[1].draw
@@ -260,6 +283,7 @@ class Game < Gosu::Window
 				@continue_spin = false
 				@home_screen = true
 				@freeze_floor = false
+				@speed = 1.0
 			end
 		elsif @playing
 			@player.draw
@@ -268,6 +292,7 @@ class Game < Gosu::Window
 
 	def button_down(id)
 		if id == Gosu::KB_ESCAPE
+			@player.save_data
 			close
 		else
 			super
