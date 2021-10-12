@@ -61,8 +61,11 @@ class Player
 
 	def start_death_spin
 		@die.play
+
 		@average_score = (@average_score * @num_runs + @score) / (@num_runs + 1).to_f
 		@num_runs += 1
+		save_data
+
 		@angle = 0.0
 		@vel_y = 5.0
 		death_spin
@@ -78,6 +81,8 @@ class Player
 	def draw
 		@image.draw(@x, @y, ZOrder::PLAYER)
 	end
+
+	private
 
 	def get_data
 		return [0, 0, 0] unless File.file?("data/data.yaml")
@@ -351,7 +356,6 @@ class Game < Gosu::Window
 
 	def button_down(id)
 		if id == Gosu::KB_ESCAPE
-			@player.save_data
 			close
 		else
 			super
