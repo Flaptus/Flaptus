@@ -210,6 +210,10 @@ class Game < Gosu::Window
 		super Background::IMAGE.width, Background::IMAGE.height
 		self.caption = "Jumpy Cactus"
 
+		@background_music = Gosu::Song.new("media/WHEN_THE_CAC_IS_TUS.mp3")
+		@background_music.volume = 0.75
+		@background_music.play(true)
+
 		@heading = Gosu::Font.new(50)
 		@paragraph = Gosu::Font.new(20)
 		@score_text = Gosu::Font.new(35)
@@ -322,6 +326,12 @@ class Game < Gosu::Window
 		end
 
 		if @start_spin
+			@background_music.pause
+			Thread.new do
+				sleep 1.75
+				@background_music.play(true)
+			end
+
 			@player.start_death_spin
 			@start_spin = false
 			@continue_spin = true
