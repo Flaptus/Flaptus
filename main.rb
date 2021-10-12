@@ -21,7 +21,10 @@ class Player
 	attr_reader :x, :y, :width, :height, :score, :average_score, :high_score
 
 	def initialize
+		@flap = Gosu::Sample.new("media/flap.wav")
+		@die = Gosu::Sample.new("media/die.wav")
 		@image = Gosu::Image.new("media/player.png")
+
 		@x = @y = @vel_y = @angle = 0.0
 		@score = 0
 		@width = @image.width
@@ -41,6 +44,7 @@ class Player
 	end
 
 	def jump
+		@flap.play
 		@vel_y = 5.5
 	end
 
@@ -56,6 +60,7 @@ class Player
 	end
 
 	def start_death_spin
+		@die.play
 		@average_score = (@average_score * @num_runs + @score) / (@num_runs + 1).to_f
 		@num_runs += 1
 		@angle = 0.0
@@ -262,8 +267,6 @@ class Game < Gosu::Window
 		@floor.draw
 
 		if @playing || @start_spin || @continue_spin
-			@speed += 0.00075
-
 			@pipes.each do |pair|
 				pair[0].draw
 				pair[1].draw
@@ -287,6 +290,7 @@ class Game < Gosu::Window
 			end
 		elsif @playing
 			@player.draw
+			@speed += 0.00075
 		end
 	end
 
