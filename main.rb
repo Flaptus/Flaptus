@@ -168,17 +168,54 @@ class Floor
 end
 
 
+class FullScreenButton
+	attr_writer :hover
+	attr_reader :x, :y, :width
+
+	def initialize
+		@images = [
+			Gosu::Image.new("media/fullscreen_button_smallscreen.png"),
+			Gosu::Image.new("media/fullscreen_button_smallscreen_hover.png"),
+			Gosu::Image.new("media/fullscreen_button_fullscreen.png"),
+			Gosu::Image.new("media/fullscreen_button_fullscreen_hover.png")
+		]
+		@width = @images[0].width
+		@height = @images[0].height
+		@x = @y = 0.0
+		@full = false
+	end
+
+	def warp(x, y)
+		@x, @y, = x, y
+	end
+
+	def toggle
+		@full = !@full
+	end
+
+	def mouse_within?(mouse_x, mouse_y)
+		@y < mouse_y && @y + @height > mouse_y && @x < mouse_x && @x + @width > mouse_x
+	end
+
+	def draw
+		@images[(@full ? 2 : 0) + (@hover ? 1 : 0)].draw(@x, @y, ZOrder::UI)
+	end
+end
+
 
 
 
 class Game < Gosu::Window
 	def initialize
-		super Background::IMAGE.width, Background::IMAGE.height, fullscreen: true
+		super Background::IMAGE.width, Background::IMAGE.height
 		self.caption = "Jumpy Cactus"
 
 		@heading = Gosu::Font.new(50)
 		@paragraph = Gosu::Font.new(20)
 		@score_text = Gosu::Font.new(35)
+
+		@fullscreen_button = FullScreenButton.new
+		@fullscreen_button.warp(Background::IMAGE.width - @fullscreen_button.width - 20, 20)
 
 		@floor = Floor.new
 		@floor.warp(0, Background::IMAGE.height - @floor.image.height)
@@ -203,12 +240,19 @@ class Game < Gosu::Window
 
 	def update
 		if @home_screen
+			@fullscreen_button.hover = @fullscreen_button.mouse_within?(self.mouse_x, self.mouse_y)
 			if (Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT)) && @key_released
 				@key_released = false
-				@home_screen = false
-				@playing = true
-				@player.reset
-				@pipes = []
+
+				if @fullscreen_button.mouse_within?(self.mouse_x, self.mouse_y)
+					self.fullscreen = !self.fullscreen?
+					@fullscreen_button.toggle
+				else
+					@home_screen = false
+					@playing = true
+					@player.reset
+					@pipes = []
+				end
 			elsif !(Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT))
 				@key_released = true
 			end
@@ -256,6 +300,7 @@ class Game < Gosu::Window
 		Background.draw(0, 0, ZOrder::BACKGROUND)
 
 		if @home_screen
+			@fullscreen_button.draw
 			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("Average score: #{@player.average_score.round(2)}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("FLAPTUS", Background::IMAGE.width / 2 - 100, Background::IMAGE.height / 2 - 25, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
