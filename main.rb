@@ -1,13 +1,16 @@
 require "gosu"
 require "yaml"
 
+
+ROOT_PATH = File.expand_path(".", __dir__)
+
 module ZOrder
 	BACKGROUND, PIPES, FLOOR, PLAYER, UI = *0...5
 end
 
 
 module Background
-	IMAGE = Gosu::Image.new("media/background.png", tileable: false)
+	IMAGE = Gosu::Image.new("#{ROOT_PATH}/media/background.png", tileable: false)
 
 	def self.draw(x, y, z)
 		IMAGE.draw(x, y, z)
@@ -21,9 +24,9 @@ class Player
 	attr_reader :x, :y, :width, :height, :score, :average_score, :high_score
 
 	def initialize
-		@flap = Gosu::Sample.new("media/flap.wav")
-		@die = Gosu::Sample.new("media/die.wav")
-		@image = Gosu::Image.new("media/player.png")
+		@flap = Gosu::Sample.new("#{ROOT_PATH}/media/flap.wav")
+		@die = Gosu::Sample.new("#{ROOT_PATH}/media/die.wav")
+		@image = Gosu::Image.new("#{ROOT_PATH}/media/player.png")
 
 		@x = @y = @vel_y = @angle = 0.0
 		@score = 0
@@ -114,7 +117,7 @@ class Pipe
 	attr_accessor :passed_player
 
 	def initialize(direction)
-		@image = Gosu::Image.new("media/pipe_#{direction}.png")
+		@image = Gosu::Image.new("#{ROOT_PATH}/media/pipe_#{direction}.png")
 		@x = @y = 0.0
 		@height = @image.height
 		@width = @image.width
@@ -154,7 +157,7 @@ class Floor
 	attr_reader :y, :image
 
 	def initialize
-		@image = Gosu::Image.new("media/floor.png")
+		@image = Gosu::Image.new("#{ROOT_PATH}/media/floor.png")
 		@x = @y = 0.0
 	end
 
@@ -179,10 +182,10 @@ class FullScreenButton
 
 	def initialize
 		@images = [
-			Gosu::Image.new("media/fullscreen_button_smallscreen.png"),
-			Gosu::Image.new("media/fullscreen_button_smallscreen_hover.png"),
-			Gosu::Image.new("media/fullscreen_button_fullscreen.png"),
-			Gosu::Image.new("media/fullscreen_button_fullscreen_hover.png")
+			Gosu::Image.new("#{ROOT_PATH}/media/fullscreen_button_smallscreen.png"),
+			Gosu::Image.new("#{ROOT_PATH}/media/fullscreen_button_smallscreen_hover.png"),
+			Gosu::Image.new("#{ROOT_PATH}/media/fullscreen_button_fullscreen.png"),
+			Gosu::Image.new("#{ROOT_PATH}/media/fullscreen_button_fullscreen_hover.png")
 		]
 		@width = @images[0].width
 		@height = @images[0].height
@@ -215,7 +218,7 @@ class Game < Gosu::Window
 		super Background::IMAGE.width, Background::IMAGE.height
 		self.caption = "Jumpy Cactus"
 
-		@background_music = Gosu::Song.new("media/WHEN_THE_CAC_IS_TUS.mp3")
+		@background_music = Gosu::Song.new("#{ROOT_PATH}/media/WHEN_THE_CAC_IS_TUS.mp3")
 		@background_music.volume = 0.75
 		@background_music.play(true)
 
