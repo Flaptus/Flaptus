@@ -222,9 +222,9 @@ class Game < Gosu::Window
 		@background_music.volume = 0.75
 		@background_music.play(true)
 
-		@heading = Gosu::Font.new(50)
-		@paragraph = Gosu::Font.new(20)
-		@score_text = Gosu::Font.new(35)
+		@heading = Gosu::Font.new(50, name: "#{ROOT_PATH}/media/fonts/VarelaRound-Regular.ttf")
+		@paragraph = Gosu::Font.new(20, name: "#{ROOT_PATH}/media/fonts/VarelaRound-Regular.ttf")
+		@score_text = Gosu::Font.new(35, name: "#{ROOT_PATH}/media/fonts/VarelaRound-Regular.ttf")
 
 		@fullscreen_button = FullScreenButton.new
 		@fullscreen_button.warp(Background::IMAGE.width - @fullscreen_button.width - 20, 20)
@@ -315,8 +315,8 @@ class Game < Gosu::Window
 			@fullscreen_button.draw
 			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("Average score: #{@player.average_score.round(2)}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@score_text.draw_text("FLAPTUS", Background::IMAGE.width / 2 - 100, Background::IMAGE.height / 2 - 25, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@paragraph.draw_text("Click or press spacebar to play", Background::IMAGE.width / 2 - 142.5, Background::IMAGE.height / 2 + 25, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@heading.draw_text("FLAPTUS", Background::IMAGE.width / 2 - 105, Background::IMAGE.height / 2 - 25, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@paragraph.draw_text("Click or press spacebar to play", Background::IMAGE.width / 2 - 132.5, Background::IMAGE.height / 2 + 25, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 		end
 
 
