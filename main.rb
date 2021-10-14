@@ -10,7 +10,7 @@ end
 
 
 module Background
-	IMAGE = Gosu::Image.new("#{ROOT_PATH}/media/background.png", tileable: false)
+	IMAGE = Gosu::Image.new("#{ROOT_PATH}/media/images/background.png", tileable: false)
 
 	def self.draw(x, y, z)
 		IMAGE.draw(x, y, z)
@@ -24,9 +24,9 @@ class Player
 	attr_reader :x, :y, :width, :height, :score, :average_score, :high_score
 
 	def initialize
-		@flap = Gosu::Sample.new("#{ROOT_PATH}/media/flap.wav")
-		@die = Gosu::Sample.new("#{ROOT_PATH}/media/die.wav")
-		@image = Gosu::Image.new("#{ROOT_PATH}/media/player.png")
+		@flap = Gosu::Sample.new("#{ROOT_PATH}/media/audio/flap.wav")
+		@die = Gosu::Sample.new("#{ROOT_PATH}/media/audio/die.wav")
+		@image = Gosu::Image.new("#{ROOT_PATH}/media/audio/player.png")
 
 		@x = @y = @vel_y = @angle = 0.0
 		@score = 0
@@ -88,19 +88,19 @@ class Player
 	private
 
 	def get_data
-		return [0, 0, 0] unless File.file?("flaptus_data/data.yaml")
-		data = YAML.load_file("flaptus_data/data.yaml")
+		return [0, 0, 0] unless File.file?("#{ROOT_PATH}/flaptus_data/data.yaml")
+		data = YAML.load_file("#{ROOT_PATH}/flaptus_data/data.yaml")
 		[data[:high_score], data[:average_score], data[:num_runs]]
 	end
 
 	def save_data
 		begin
-			File.open("flaptus_data/data.yaml")
+			File.open("#{ROOT_PATH}/flaptus_data/data.yaml")
 		rescue Errno::ENOENT
-			Dir.mkdir("data")
+			Dir.mkdir("#{ROOT_PATH}/flaptus_data")
 		end
 
-		File.open("flaptus_data/data.yaml", "w") do |file|
+		File.open("#{ROOT_PATH}/flaptus_data/data.yaml", "w") do |file|
 			file.write({
 				high_score: @high_score,
 				average_score: @average_score,
@@ -117,7 +117,7 @@ class Pipe
 	attr_accessor :passed_player
 
 	def initialize(direction)
-		@image = Gosu::Image.new("#{ROOT_PATH}/media/pipe_#{direction}.png")
+		@image = Gosu::Image.new("#{ROOT_PATH}/media/images/pipe_#{direction}.png")
 		@x = @y = 0.0
 		@height = @image.height
 		@width = @image.width
@@ -157,7 +157,7 @@ class Floor
 	attr_reader :y, :image
 
 	def initialize
-		@image = Gosu::Image.new("#{ROOT_PATH}/media/floor.png")
+		@image = Gosu::Image.new("#{ROOT_PATH}/media/images/floor.png")
 		@x = @y = 0.0
 	end
 
@@ -182,10 +182,10 @@ class FullScreenButton
 
 	def initialize
 		@images = [
-			Gosu::Image.new("#{ROOT_PATH}/media/fullscreen_button_smallscreen.png"),
-			Gosu::Image.new("#{ROOT_PATH}/media/fullscreen_button_smallscreen_hover.png"),
-			Gosu::Image.new("#{ROOT_PATH}/media/fullscreen_button_fullscreen.png"),
-			Gosu::Image.new("#{ROOT_PATH}/media/fullscreen_button_fullscreen_hover.png")
+			Gosu::Image.new("#{ROOT_PATH}/media/images/fullscreen_button_smallscreen.png"),
+			Gosu::Image.new("#{ROOT_PATH}/media/images/fullscreen_button_smallscreen_hover.png"),
+			Gosu::Image.new("#{ROOT_PATH}/media/images/fullscreen_button_fullscreen.png"),
+			Gosu::Image.new("#{ROOT_PATH}/media/images/fullscreen_button_fullscreen_hover.png")
 		]
 		@width = @images[0].width
 		@height = @images[0].height
@@ -218,7 +218,7 @@ class Game < Gosu::Window
 		super Background::IMAGE.width, Background::IMAGE.height
 		self.caption = "Jumpy Cactus"
 
-		@background_music = Gosu::Song.new("#{ROOT_PATH}/media/WHEN_THE_CAC_IS_TUS.mp3")
+		@background_music = Gosu::Song.new("#{ROOT_PATH}/media/audio/WHEN_THE_CAC_IS_TUS.mp3")
 		@background_music.volume = 0.75
 		@background_music.play(true)
 
