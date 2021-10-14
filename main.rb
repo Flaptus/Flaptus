@@ -26,7 +26,7 @@ class Player
 	def initialize
 		@flap = Gosu::Sample.new("#{ROOT_PATH}/media/audio/flap.wav")
 		@die = Gosu::Sample.new("#{ROOT_PATH}/media/audio/die.wav")
-		@image = Gosu::Image.new("#{ROOT_PATH}/media/audio/player.png")
+		@image = Gosu::Image.new("#{ROOT_PATH}/media/images/player.png")
 
 		@x = @y = @vel_y = @angle = 0.0
 		@score = 0
