@@ -88,19 +88,19 @@ class Player
 	private
 
 	def get_data
-		return [0, 0, 0] unless File.file?("#{ROOT_PATH}/flaptus_data/data.yaml")
-		data = YAML.load_file("#{ROOT_PATH}/flaptus_data/data.yaml")
+		return [0, 0, 0] unless File.file?("flaptus_data/data.yaml")
+		data = YAML.load_file("flaptus_data/data.yaml")
 		[data[:high_score], data[:average_score], data[:num_runs]]
 	end
 
 	def save_data
 		begin
-			File.open("#{ROOT_PATH}/flaptus_data/data.yaml")
+			File.open("flaptus_data/data.yaml")
 		rescue Errno::ENOENT
-			Dir.mkdir("#{ROOT_PATH}/flaptus_data")
+			Dir.mkdir("flaptus_data")
 		end
 
-		File.open("#{ROOT_PATH}/flaptus_data/data.yaml", "w") do |file|
+		File.open("flaptus_data/data.yaml", "w") do |file|
 			file.write({
 				high_score: @high_score,
 				average_score: @average_score,
