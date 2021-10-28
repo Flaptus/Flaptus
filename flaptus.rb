@@ -30,6 +30,8 @@ class Game < Gosu::Window
 		super Background::IMAGE.width, Background::IMAGE.height
 		self.caption = "Flaptus"
 
+		@game_state = :home_screen
+
 		@background_music = Gosu::Song.new("#{ROOT_PATH}/assets/audio/WHEN_THE_CAC_IS_TUS.mp3")
 		@background_music.volume = 0.75
 
@@ -44,29 +46,17 @@ class Game < Gosu::Window
 		@player = Player.new
 		@player.reset
 
-		@pipes = []
-		@next_pipe = 0
-
-		@home_screen = true
-		@playing = false
+		@speed        = 1.0
+		@pipes        = []
+		@next_pipe    = 0
+		@gap_height   = 150
 		@key_released = true
-		@freeze_floor = false
-		@start_spin = false
-		@continue_spin = false
-
-		@gap_height = 150
-
-		@speed = 1.0
-
-		@fullscreen_button = FullScreenButton.new
-		@fullscreen_button.warp(Background::IMAGE.width - @fullscreen_button.width - 20, 20)
 
 		begin
 			URI.open("#{REPO_URL}/releases/latest") { |f| @latest_version = f.base_uri.to_s.split("/v")[1] }
-			@request_update = @latest_version != VERSION
+			@game_state = :request_update if @latest_version != VERSION
 		rescue
 			# no internet connection
-			@request_update = false
 		end
 
 		@update_container = UpdateContainer.new(VERSION, @latest_version)
@@ -87,7 +77,11 @@ class Game < Gosu::Window
 			@update_container.y + @update_container.height - @yes_update.height - 20
 		)
 
-		@buttons = [
+
+		@fullscreen_button = FullScreenButton.new
+		@fullscreen_button.warp(Background::IMAGE.width - @fullscreen_button.width - 20, 20)
+
+		@home_screen_buttons = [
 			@fullscreen_button
 		]
 
@@ -96,51 +90,55 @@ class Game < Gosu::Window
 	end
 
 	def update
-		if @home_screen
-			if @request_update
-				@no_update.check_hover(self.mouse_x, self.mouse_y)
-				@yes_update.check_hover(self.mouse_x, self.mouse_y)
-			else
-				@buttons.each { |button| button.check_hover(self.mouse_x, self.mouse_y) }
+		case @game_state
+		when :request_update
+			@no_update.check_hover(self.mouse_x, self.mouse_y)
+			@yes_update.check_hover(self.mouse_x, self.mouse_y)
+
+			if Gosu.button_down?(Gosu::MS_LEFT) && @key_released
+				@key_released = false
+
+				if @no_update.hover?
+					@game_state = :home_screen
+				elsif @yes_update.hover?
+					File.rename("flaptus.exe", "flaptus-old.exe")
+
+					File.open("flaptus.exe", "w") {}
+					download = URI.open("#{REPO_URL}/releases/download/v#{@latest_version}/flaptus.exe")
+					IO.copy_stream(download, "flaptus.exe")
+
+					pid = spawn "flaptus"
+					Process.detach(pid)
+					close
+				end
+			elsif !(Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT))
+				@key_released = true
 			end
+
+		when :home_screen
+			@home_screen_buttons.each { |button| button.check_hover(self.mouse_x, self.mouse_y) }
 
 			if (Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT)) && @key_released
 				@key_released = false
 
-				if @request_update
-					if @no_update.hover?
-						@request_update = false
-					elsif @yes_update.hover?
-						File.rename("flaptus.exe", "flaptus-old.exe")
-
-						File.open("flaptus.exe", "w") {}
-						download = URI.open("#{REPO_URL}/releases/download/v#{@latest_version}/flaptus.exe")
-						IO.copy_stream(download, "flaptus.exe")
-
-						pid = spawn "flaptus"
-						Process.detach(pid)
-						close
-					end
-				elsif @fullscreen_button.hover?
+				if @fullscreen_button.hover?
 					@fullscreen_button.click
 					self.fullscreen = !self.fullscreen?
 				else
-					@home_screen = false
-					@playing = true
+					@game_state = :playing
 					@player.reset
 					@pipes = []
 				end
 			elsif !(Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT))
 				@key_released = true
 			end
-		elsif @playing
+
+		when :playing
 			pipes_within_x = @pipes[0..1].select { |pair| pair[0].within_x?(@player) }
 			not_within_gap = pipes_within_x.length == 1 ? !pipes_within_x[0][0].within_gap_y?(@player, @gap_height) : false
 
 			if @floor.y - @player.y <= 50 || not_within_gap
-				@start_spin = true
-				@freeze_floor = true
-				@playing = false
+				@game_state = :start_death
 				return
 			elsif (Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT)) && @key_released
 				@key_released = false
@@ -148,6 +146,7 @@ class Game < Gosu::Window
 			elsif !(Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT))
 				@key_released = true
 			end
+
 			@player.move
 
 			if @pipes.length == 0 || @pipes[-1][0].x < Background::IMAGE.width / 2
@@ -174,38 +173,45 @@ class Game < Gosu::Window
 	end
 
 	def draw
-		Background.draw(0, 0, ZOrder::BACKGROUND)
-
-		if @home_screen
-			@buttons.each { |button| button.draw }
-
+		case @game_state
+		when :home_screen, :request_update
 			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("Average score: #{@player.average_score.round(2)}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@heading.draw_text("FLAPTUS", Background::IMAGE.width / 2 - 125, Background::IMAGE.height / 2 - 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@paragraph.draw_text("Click or press spacebar to play", Background::IMAGE.width / 2 - 175, Background::IMAGE.height / 2 + 35, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 
-			if @request_update
+			@home_screen_buttons.each { |button| button.draw }
+
+			@floor.move(@speed)
+
+			if @game_state == :request_update
 				@update_container.draw
 				@no_update.draw
 				@yes_update.draw
 			end
-		end
 
+		when :playing
+			@score_text.draw_text("High score:	#{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 
-		@floor.move(@speed) unless @freeze_floor
-		@floor.draw
-
-		if @playing || @start_spin || @continue_spin
 			@pipes.each do |pair|
 				pair[0].draw
 				pair[1].draw
 			end
 
+			@player.draw
+			@floor.move(@speed)
+
+			@speed += 0.00075
+
+		when :start_death
 			@score_text.draw_text("High score:	#{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-		end
 
-		if @start_spin
+			@pipes.each do |pair|
+				pair[0].draw
+				pair[1].draw
+			end
 			@background_music.pause
 			Thread.new do
 				sleep 1.75
@@ -213,20 +219,28 @@ class Game < Gosu::Window
 			end
 
 			@player.start_death_spin
-			@start_spin = false
-			@continue_spin = true
-		elsif @continue_spin
+			@game_state = :dying
+
+		when :dying
+			@score_text.draw_text("High score:	#{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+
+			@pipes.each do |pair|
+				pair[0].draw
+				pair[1].draw
+			end
+
 			@player.death_spin
+
 			if Background::IMAGE.height - @player.y <= 0
-				@continue_spin = false
-				@home_screen = true
-				@freeze_floor = false
+				@game_state = :home_screen
 				@speed = 1.0
 			end
-		elsif @playing
-			@player.draw
-			@speed += 0.00075
 		end
+
+		# in every game state
+		@floor.draw
+		Background.draw(0, 0, ZOrder::BACKGROUND)
 	end
 
 	def button_down(id)
