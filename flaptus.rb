@@ -117,7 +117,9 @@ class Game < Gosu::Window
 						download = URI.open("#{REPO_URL}/releases/download/v#{@latest_version}/flaptus.exe")
 						IO.copy_stream(download, "flaptus.exe")
 
-						exec("flaptus.exe")
+						pid = spawn "flaptus"
+						Process.detach(pid)
+						close
 					end
 				elsif @fullscreen_button.hover?
 					@fullscreen_button.click
