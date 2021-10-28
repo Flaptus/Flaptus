@@ -59,3 +59,23 @@ class FullScreenButton < Button
 		self.change_images(*(@full ? @fullscreen_images : @smallscreen_images))
 	end
 end
+
+
+
+class YesButton < Button
+	def initialize
+		super(
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/yes_button.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/yes_button_hover.png")
+		)
+	end
+end
+
+class NoButton < Button
+	def initialize
+		super(
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/no_button.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/no_button_hover.png")
+		)
+	end
+end
