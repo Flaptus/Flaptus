@@ -3,7 +3,7 @@ class Pipe
 	attr_accessor :passed_player
 
 	def initialize(direction)
-		@image = Gosu::Image.new("#{ROOT_PATH}/assets/images/pipe_#{direction}.png")
+		@image = Gosu::Image.new("#{ROOT_PATH}/assets/images/rock_#{direction}.png")
 		@x = @y = 0.0
 		@height = @image.height
 		@width = @image.width

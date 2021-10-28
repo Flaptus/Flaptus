@@ -4,8 +4,10 @@ class Player
 	def initialize
 		@flap = Gosu::Sample.new("#{ROOT_PATH}/assets/audio/flap.wav")
 		@die = Gosu::Sample.new("#{ROOT_PATH}/assets/audio/die.wav")
-		@image = Gosu::Image.new("#{ROOT_PATH}/assets/images/player.png")
+		@image = Gosu::Image.new("#{ROOT_PATH}/assets/images/flaptus.png")
+		@image_flap = Gosu::Image.new("#{ROOT_PATH}/assets/images/flaptus_flap.png")
 
+		@flapping = 0
 		@x = @y = @vel_y = @angle = 0.0
 		@score = 0
 		@width = @image.width
@@ -24,9 +26,10 @@ class Player
 		@x, @y = x, y
 	end
 
-	def jump
+	def flap
 		@flap.play
 		@vel_y = 5.5
+		@flapping = 4
 	end
 
 	def move
@@ -60,7 +63,8 @@ class Player
 	end
 
 	def draw
-		@image.draw(@x, @y, ZOrder::PLAYER)
+		(@flapping > 0 ? @image_flap : @image).draw(@x, @y, ZOrder::PLAYER)
+		@flapping -= 1 if @flapping > 0
 	end
 
 	private

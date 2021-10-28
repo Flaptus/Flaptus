@@ -1,4 +1,4 @@
-VERSION   = "1.3.0"
+VERSION   = "1.3.1"
 ROOT_PATH = File.expand_path(".", __dir__)
 REPO_URL  = "https://github.com/Coding-Cactus/Flaptus"
 
@@ -142,7 +142,7 @@ class Game < Gosu::Window
 				return
 			elsif (Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT)) && @key_released
 				@key_released = false
-				@player.jump
+				@player.flap
 			elsif !(Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT))
 				@key_released = true
 			end
