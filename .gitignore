@@ -1,2 +1,4 @@
 flaptus_data/
 pkg/
+vendor/
+.bundle/
