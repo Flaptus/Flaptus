@@ -1,6 +1,7 @@
 VERSION   = "1.3.1"
 ROOT_PATH = File.expand_path(".", __dir__)
 REPO_URL  = "https://github.com/Coding-Cactus/Flaptus"
+VOLUME = 0.75
 
 require "gosu"
 require "yaml"
@@ -25,15 +26,36 @@ module ZOrder
 end
 
 
+def get_preferences
+	return {
+		"mute" => false,
+		"fullscreen" => false,
+	} unless File.file?("flaptus_data/preferences.yaml")
+	YAML.load_file("flaptus_data/preferences.yaml")
+end
+
+def update_preferences(data)
+	if !File.directory?("flaptus_data")
+		Dir.mkdir("flaptus_data")
+	end
+
+	File.open("flaptus_data/preferences.yaml", "w") do |file|
+		file.write(data.to_yaml)
+	end
+end
+
+
 class Game < Gosu::Window
 	def initialize
 		super Background::IMAGE.width, Background::IMAGE.height
 		self.caption = "Flaptus"
 
+		@preferences = get_preferences
+
 		@game_state = :home_screen
 
 		@background_music = Gosu::Song.new("#{ROOT_PATH}/assets/audio/WHEN_THE_CAC_IS_TUS.mp3")
-		@background_music.volume = 0.75
+		@background_music.volume = VOLUME
 
 		@heading = Gosu::Font.new(100, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
 		@paragraph = Gosu::Font.new(30, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
@@ -81,8 +103,28 @@ class Game < Gosu::Window
 		@fullscreen_button = FullScreenButton.new
 		@fullscreen_button.warp(Background::IMAGE.width - @fullscreen_button.width - 20, 20)
 
+		if @preferences[:fullscreen]
+			@fullscreen_button.click
+			self.fullscreen = !self.fullscreen?
+		end
+
+		@mute_button = MuteButton.new
+		@mute_button.warp(
+			Background::IMAGE.width - @mute_button.width - @fullscreen_button.width - 40, 20
+		)
+
+		if @preferences[:mute]
+			@mute_button.click
+			if @background_music.volume == 0.0
+				@background_music.volume = VOLUME
+			else
+				@background_music.volume = 0.0
+			end
+		end
+
 		@home_screen_buttons = [
-			@fullscreen_button
+			@fullscreen_button,
+			@mute_button
 		]
 
 
@@ -124,6 +166,19 @@ class Game < Gosu::Window
 				if @fullscreen_button.hover?
 					@fullscreen_button.click
 					self.fullscreen = !self.fullscreen?
+
+					@preferences[:fullscreen] = !@preferences[:fullscreen]
+					update_preferences(@preferences)
+				elsif @mute_button.hover?
+					@mute_button.click
+					if @background_music.volume == 0.0
+						@background_music.volume = VOLUME
+					else
+						@background_music.volume = 0.0
+					end
+
+					@preferences[:mute] = !@preferences[:mute]
+					update_preferences(@preferences)
 				else
 					@game_state = :playing
 					@player.reset
