@@ -11,6 +11,7 @@ require_relative "#{ROOT_PATH}/flaptus/pipe.rb"
 require_relative "#{ROOT_PATH}/flaptus/floor.rb"
 require_relative "#{ROOT_PATH}/flaptus/player.rb"
 require_relative "#{ROOT_PATH}/flaptus/buttons.rb"
+require_relative "#{ROOT_PATH}/flaptus/foreground.rb"
 require_relative "#{ROOT_PATH}/flaptus/background.rb"
 require_relative "#{ROOT_PATH}/flaptus/update_container.rb"
 
@@ -22,7 +23,7 @@ rescue Errno::ENOENT
 end
 
 module ZOrder
-	BACKGROUND, PIPES, FLOOR, PLAYER, UI = *0...5
+	BACKGROUND, FOREGROUND, PIPES, FLOOR, PLAYER, UI = *0...6
 end
 
 
@@ -66,6 +67,8 @@ class Game < Gosu::Window
 
 		@floor = Floor.new
 		@floor.warp(0, Background::IMAGE.height - @floor.image.height)
+
+		@foreground = Foreground.new
 
 		@player = Player.new
 		@player.reset
@@ -206,6 +209,7 @@ class Game < Gosu::Window
 			end
 
 			@floor.move(@speed)
+			@foreground.move(@speed)
 
 		when :playing
 			pipes_within_x = @pipes[0..1].select { |pair| pair[0].within_x?(@player) }
@@ -223,6 +227,7 @@ class Game < Gosu::Window
 
 			@player.move
 			@floor.move(@speed)
+			@foreground.move(@speed)
 
 			if @pipes.length == 0 || @pipes[-1][0].x < Background::IMAGE.width / 2
 				new_down_pipe = Pipe.new("down")
@@ -299,6 +304,7 @@ class Game < Gosu::Window
 
 		# in every game state
 		@floor.draw
+		@foreground.draw
 		Background.draw(0, 0, ZOrder::BACKGROUND)
 	end
 
