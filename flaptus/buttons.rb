@@ -87,6 +87,31 @@ end
 
 
 
+class SfxButton < Button
+	def initialize
+		@mute_images = [
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/sfx.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/sfx_hover.png")
+		]
+
+		@unmute_images = [
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/unsfx.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/unsfx_hover.png")
+		]
+
+		super *@mute_images
+
+		@muted = false
+	end
+
+	def click
+		@muted = !@muted
+		self.change_images(*(@muted ? @unmute_images : @mute_images))
+	end
+end
+
+
+
 class YesButton < Button
 	def initialize
 		super(
