@@ -13,6 +13,11 @@ class Player
 		@width = @image.width
 		@height = @image.height
 		@high_score, @average_score, @num_runs = get_data
+		@sfx_muted = false
+	end
+
+	def set_sfx_muted(muted)
+		@sfx_muted = muted
 	end
 
 	def reset
@@ -27,7 +32,10 @@ class Player
 	end
 
 	def flap
-		@flap.play
+		if !@sfx_muted
+			@flap.play
+		end
+
 		@vel_y = 5.5
 		@flapping = 4
 	end
@@ -44,7 +52,9 @@ class Player
 	end
 
 	def start_death_spin
-		@die.play
+		if !@sfx_muted
+			@die.play
+		end
 
 		@average_score = (@average_score * @num_runs + @score) / (@num_runs + 1).to_f
 		@num_runs += 1
