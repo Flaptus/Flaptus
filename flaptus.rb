@@ -51,14 +51,19 @@ class Game < Gosu::Window
 		self.caption = "Flaptus"
 
 		@preferences = get_preferences
-
-		@game_state = :home_screen
+    
+		@speed        = 1.0
+		@pipes        = []
+		@next_pipe    = 0
+		@gap_height   = 150
+		@game_state   = :home_screen
+		@key_released = true
 
 		@background_music = Gosu::Song.new("#{ROOT_PATH}/assets/audio/WHEN_THE_CAC_IS_TUS.mp3")
 		@background_music.volume = VOLUME
 
-		@heading = Gosu::Font.new(100, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
-		@paragraph = Gosu::Font.new(30, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
+		@heading    = Gosu::Font.new(100, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
+		@paragraph  = Gosu::Font.new(30, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
 		@score_text = Gosu::Font.new(45, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
 
 
@@ -68,11 +73,6 @@ class Game < Gosu::Window
 		@player = Player.new
 		@player.reset
 
-		@speed        = 1.0
-		@pipes        = []
-		@next_pipe    = 0
-		@gap_height   = 150
-		@key_released = true
 
 		begin
 			URI.open("#{REPO_URL}/releases/latest") { |f| @latest_version = f.base_uri.to_s.split("/v")[1] }
@@ -87,7 +87,7 @@ class Game < Gosu::Window
 			(Background::IMAGE.height - @update_container.height) / 2
 		)
 
-		@no_update = NoButton.new
+		@no_update  = NoButton.new
 		@yes_update = YesButton.new
 
 		@no_update.warp(
@@ -188,11 +188,13 @@ class Game < Gosu::Window
 				@key_released = true
 			end
 
+			@floor.move(@speed)
+
 		when :playing
 			pipes_within_x = @pipes[0..1].select { |pair| pair[0].within_x?(@player) }
 			not_within_gap = pipes_within_x.length == 1 ? !pipes_within_x[0][0].within_gap_y?(@player, @gap_height) : false
 
-			if @floor.y - @player.y <= 50 || not_within_gap
+			if @player.y + @player.height >= @floor.y || not_within_gap
 				@game_state = :start_death
 				return
 			elsif (Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT)) && @key_released
@@ -203,6 +205,7 @@ class Game < Gosu::Window
 			end
 
 			@player.move
+			@floor.move(@speed)
 
 			if @pipes.length == 0 || @pipes[-1][0].x < Background::IMAGE.width / 2
 				new_down_pipe = Pipe.new("down")
@@ -237,16 +240,14 @@ class Game < Gosu::Window
 
 			@home_screen_buttons.each { |button| button.draw }
 
-			@floor.move(@speed)
-
 			if @game_state == :request_update
 				@update_container.draw
 				@no_update.draw
 				@yes_update.draw
 			end
 
-		when :playing
-			@score_text.draw_text("High score:	#{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+		when :playing, :start_death, :dying
+			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 
 			@pipes.each do |pair|
@@ -254,42 +255,28 @@ class Game < Gosu::Window
 				pair[1].draw
 			end
 
-			@player.draw
-			@floor.move(@speed)
+			case @game_state
+			when :playing
+				@player.draw
+				@speed += 0.00075
 
-			@speed += 0.00075
+			when :start_death
+				@background_music.pause
+				Thread.new do
+					sleep 1.75
+					@background_music.play(true)
+				end
 
-		when :start_death
-			@score_text.draw_text("High score:	#{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+				@player.start_death_spin
+				@game_state = :dying
 
-			@pipes.each do |pair|
-				pair[0].draw
-				pair[1].draw
-			end
-			@background_music.pause
-			Thread.new do
-				sleep 1.75
-				@background_music.play(true)
-			end
+			when :dying
+				@player.death_spin
 
-			@player.start_death_spin
-			@game_state = :dying
-
-		when :dying
-			@score_text.draw_text("High score:	#{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-
-			@pipes.each do |pair|
-				pair[0].draw
-				pair[1].draw
-			end
-
-			@player.death_spin
-
-			if Background::IMAGE.height - @player.y <= 0
-				@game_state = :home_screen
-				@speed = 1.0
+				if Background::IMAGE.height - @player.y <= 0
+					@game_state = :home_screen
+					@speed = 1.0
+				end
 			end
 		end
 
