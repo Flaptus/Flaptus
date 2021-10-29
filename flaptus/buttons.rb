@@ -40,13 +40,13 @@ end
 class FullScreenButton < Button
 	def initialize
 		@smallscreen_images = [
-			Gosu::Image.new("#{ROOT_PATH}/assets/images/fullscreen_button_smallscreen.png"),
-			Gosu::Image.new("#{ROOT_PATH}/assets/images/fullscreen_button_smallscreen_hover.png")
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/fullscreen.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/fullscreen_hover.png")
 		]
 
 		@fullscreen_images = [
-			Gosu::Image.new("#{ROOT_PATH}/assets/images/fullscreen_button_fullscreen.png"),
-			Gosu::Image.new("#{ROOT_PATH}/assets/images/fullscreen_button_fullscreen_hover.png")
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/unfullscreen.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/unfullscreen_hover.png")
 		]
 
 		super *@smallscreen_images
@@ -57,6 +57,31 @@ class FullScreenButton < Button
 	def click
 		@full = !@full
 		self.change_images(*(@full ? @fullscreen_images : @smallscreen_images))
+	end
+end
+
+
+
+class MuteButton < Button
+	def initialize
+		@mute_images = [
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/mute.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/mute_hover.png")
+		]
+
+		@unmute_images = [
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/unmute.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/unmute_hover.png")
+		]
+
+		super *@mute_images
+
+		@muted = false
+	end
+
+	def click
+		@muted = !@muted
+		self.change_images(*(@muted ? @unmute_images : @mute_images))
 	end
 end
 
