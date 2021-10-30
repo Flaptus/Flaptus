@@ -1,6 +1,4 @@
 class Foreground
-	attr_reader :image
-
 	def initialize
 		@image = Gosu::Image.new("#{ROOT_PATH}/assets/images/foreground.png")
 		@x = 0.0
