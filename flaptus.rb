@@ -1,7 +1,7 @@
 VERSION   = "1.3.1"
 ROOT_PATH = File.expand_path(".", __dir__)
 REPO_URL  = "https://github.com/Coding-Cactus/Flaptus"
-VOLUME = 0.75
+VOLUME    = 0.75
 
 require "gosu"
 require "yaml"
@@ -26,29 +26,13 @@ module ZOrder
 end
 
 
-def get_preferences
-	return {} unless File.file?("flaptus_data/preferences.yaml")
-	YAML.load_file("flaptus_data/preferences.yaml")
-end
-
-def update_preferences(data)
-	if !File.directory?("flaptus_data")
-		Dir.mkdir("flaptus_data")
-	end
-
-	File.open("flaptus_data/preferences.yaml", "w") do |file|
-		file.write(data.to_yaml)
-	end
-end
-
 
 class Game < Gosu::Window
 	def initialize
 		super Background::IMAGE.width, Background::IMAGE.height
 		self.caption = "Flaptus"
 
-		@preferences = get_preferences
-    
+
 		@speed        = 1.0
 		@pipes        = []
 		@next_pipe    = 0
@@ -100,34 +84,24 @@ class Game < Gosu::Window
 		@fullscreen_button = FullScreenButton.new
 		@fullscreen_button.warp(Background::IMAGE.width - @fullscreen_button.width - 20, 20)
 
-		if @preferences[:fullscreen]
+		if @player.fullscreen?
 			@fullscreen_button.click
-			self.fullscreen = !self.fullscreen?
+			self.fullscreen = true
 		end
 
 		@mute_button = MuteButton.new
-		@mute_button.warp(
-			Background::IMAGE.width - @mute_button.width - @fullscreen_button.width - 40, 20
-		)
+		@mute_button.warp(Background::IMAGE.width - @mute_button.width - @fullscreen_button.width - 40, 20)
 
-		if @preferences[:mute]
+		if @player.mute?
 			@mute_button.click
-			if @background_music.volume == 0.0
-				@background_music.volume = VOLUME
-			else
-				@background_music.volume = 0.0
-			end
+			@background_music.volume = 0.0
 		end
 
 		@sfx_button = SfxButton.new
-		@sfx_button.warp(
-			Background::IMAGE.width - @sfx_button.width - @mute_button.width - @fullscreen_button.width - 60,
-			20
-		)
+		@sfx_button.warp(Background::IMAGE.width - @sfx_button.width - @mute_button.width - @fullscreen_button.width - 60, 20)
 
-		if @preferences[:sfx]
+		if !@player.sfx?
 			@sfx_button.click
-			@player.set_sfx_muted(true)
 		end
 
 		@home_screen_buttons = [
@@ -174,28 +148,23 @@ class Game < Gosu::Window
 
 				if @fullscreen_button.hover?
 					@fullscreen_button.click
+					@player.fullscreen = !@player.fullscreen?
+					self.fullscreen = @player.fullscreen?
 
-					@preferences[:fullscreen] = !@preferences[:fullscreen]
-					update_preferences(@preferences)
-
-					self.fullscreen = @preferences[:fullscreen]
 				elsif @mute_button.hover?
 					@mute_button.click
+					@player.mute = !@player.mute?
 
-					@preferences[:mute] = !@preferences[:mute]
-					update_preferences(@preferences)
-
-					if @preferences[:mute]
+					if @player.mute?
 						@background_music.volume = 0.0
 					else
 						@background_music.volume = VOLUME
 					end
+
 				elsif @sfx_button.hover?
 					@sfx_button.click
-
-					@preferences[:sfx] = !@preferences[:sfx]
-
-					@player.set_sfx_muted(@preferences[:sfx])
+					@player.sfx = !@player.sfx?
+					
 				else
 					@game_state = :playing
 					@player.reset
