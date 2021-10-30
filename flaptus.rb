@@ -1,6 +1,7 @@
 VERSION   = "1.3.1"
 ROOT_PATH = File.expand_path(".", __dir__)
 REPO_URL  = "https://github.com/Coding-Cactus/Flaptus"
+VOLUME    = 0.75
 
 require "gosu"
 require "yaml"
@@ -25,10 +26,12 @@ module ZOrder
 end
 
 
+
 class Game < Gosu::Window
 	def initialize
 		super Background::IMAGE.width, Background::IMAGE.height
 		self.caption = "Flaptus"
+
 
 		@speed        = 1.0
 		@pipes        = []
@@ -38,7 +41,7 @@ class Game < Gosu::Window
 		@key_released = true
 
 		@background_music = Gosu::Song.new("#{ROOT_PATH}/assets/audio/WHEN_THE_CAC_IS_TUS.mp3")
-		@background_music.volume = 0.75
+		@background_music.volume = VOLUME
 
 		@heading    = Gosu::Font.new(100, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
 		@paragraph  = Gosu::Font.new(30, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
@@ -81,8 +84,30 @@ class Game < Gosu::Window
 		@fullscreen_button = FullScreenButton.new
 		@fullscreen_button.warp(Background::IMAGE.width - @fullscreen_button.width - 20, 20)
 
+		if @player.fullscreen?
+			@fullscreen_button.click
+			self.fullscreen = true
+		end
+
+		@mute_button = MuteButton.new
+		@mute_button.warp(Background::IMAGE.width - @mute_button.width - @fullscreen_button.width - 40, 20)
+
+		if @player.mute?
+			@mute_button.click
+			@background_music.volume = 0.0
+		end
+
+		@sfx_button = SfxButton.new
+		@sfx_button.warp(Background::IMAGE.width - @sfx_button.width - @mute_button.width - @fullscreen_button.width - 60, 20)
+
+		if !@player.sfx?
+			@sfx_button.click
+		end
+
 		@home_screen_buttons = [
-			@fullscreen_button
+			@fullscreen_button,
+			@mute_button,
+			@sfx_button
 		]
 
 
@@ -123,7 +148,23 @@ class Game < Gosu::Window
 
 				if @fullscreen_button.hover?
 					@fullscreen_button.click
-					self.fullscreen = !self.fullscreen?
+					@player.fullscreen = !@player.fullscreen?
+					self.fullscreen = @player.fullscreen?
+
+				elsif @mute_button.hover?
+					@mute_button.click
+					@player.mute = !@player.mute?
+
+					if @player.mute?
+						@background_music.volume = 0.0
+					else
+						@background_music.volume = VOLUME
+					end
+
+				elsif @sfx_button.hover?
+					@sfx_button.click
+					@player.sfx = !@player.sfx?
+					
 				else
 					@game_state = :playing
 					@player.reset
