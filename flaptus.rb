@@ -53,6 +53,7 @@ class Game < Gosu::Window
 		@floor.warp(0, Background::IMAGE.height - @floor.image.height)
 
 		@foreground = Foreground.new
+		@background = Background.new
 
 		@player = Player.new
 		@player.reset
@@ -179,6 +180,7 @@ class Game < Gosu::Window
 
 			@floor.move(@speed)
 			@foreground.move(@speed)
+			@background.move(@speed)
 
 		when :playing
 			pipes_within_x = @pipes[0..1].select { |pair| pair[0].within_x?(@player) }
@@ -197,6 +199,7 @@ class Game < Gosu::Window
 			@player.move
 			@floor.move(@speed)
 			@foreground.move(@speed)
+			@background.move(@speed)
 
 			if @pipes.length == 0 || @pipes[-1][0].x < Background::IMAGE.width / 2
 				new_down_pipe = Pipe.new("down")
@@ -274,7 +277,7 @@ class Game < Gosu::Window
 		# in every game state
 		@floor.draw
 		@foreground.draw
-		Background.draw(0, 0, ZOrder::BACKGROUND)
+		@background.draw
 	end
 
 	def button_down(id)
