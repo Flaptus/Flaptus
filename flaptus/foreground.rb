@@ -12,7 +12,7 @@ class Foreground
 	end
 
 	def draw
+		@image.draw(@x + @image.width - 1, 0, ZOrder::FOREGROUND)
 		@image.draw(@x, 0, ZOrder::FOREGROUND)
-		@image.draw(@x + @image.width, 0, ZOrder::FOREGROUND)
 	end
 end

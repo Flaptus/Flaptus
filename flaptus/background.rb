@@ -14,7 +14,7 @@ class Background
 	end
 
 	def draw
+		@image.draw(@x + @image.width - 1, 0, ZOrder::BACKGROUND)
 		@image.draw(@x, 0, ZOrder::BACKGROUND)
-		@image.draw(@x + @image.width, 0, ZOrder::BACKGROUND)
 	end
 end
