@@ -2,6 +2,8 @@ VERSION   = "1.3.1"
 ROOT_PATH = File.expand_path(".", __dir__)
 REPO_URL  = "https://github.com/Coding-Cactus/Flaptus"
 VOLUME    = 0.75
+WIDTH     = 833
+HEIGHT    = 511
 
 require "gosu"
 require "yaml"
@@ -30,7 +32,7 @@ end
 
 class Game < Gosu::Window
 	def initialize
-		super Background::IMAGE.width, Background::IMAGE.height
+		super WIDTH, HEIGHT
 		self.caption = "Flaptus"
 
 
@@ -50,7 +52,7 @@ class Game < Gosu::Window
 
 
 		@floor = Floor.new
-		@floor.warp(0, Background::IMAGE.height - @floor.image.height)
+		@floor.warp(0, HEIGHT - @floor.image.height)
 
 		@foreground = Foreground.new
 		@background = Background.new
@@ -68,8 +70,8 @@ class Game < Gosu::Window
 
 		@update_container = UpdateContainer.new(VERSION, @latest_version)
 		@update_container.warp(
-			(Background::IMAGE.width - @update_container.width) / 2,
-			(Background::IMAGE.height - @update_container.height) / 2
+			(WIDTH - @update_container.width) / 2,
+			(HEIGHT - @update_container.height) / 2
 		)
 
 		@no_update  = NoButton.new
@@ -86,7 +88,7 @@ class Game < Gosu::Window
 
 
 		@fullscreen_button = FullScreenButton.new
-		@fullscreen_button.warp(Background::IMAGE.width - @fullscreen_button.width - 20, 20)
+		@fullscreen_button.warp(WIDTH - @fullscreen_button.width - 20, 20)
 
 		if @player.fullscreen?
 			@fullscreen_button.click
@@ -94,7 +96,7 @@ class Game < Gosu::Window
 		end
 
 		@mute_button = MuteButton.new
-		@mute_button.warp(Background::IMAGE.width - @mute_button.width - @fullscreen_button.width - 40, 20)
+		@mute_button.warp(WIDTH - @mute_button.width - @fullscreen_button.width - 40, 20)
 
 		if @player.mute?
 			@mute_button.click
@@ -102,7 +104,7 @@ class Game < Gosu::Window
 		end
 
 		@sfx_button = SfxButton.new
-		@sfx_button.warp(Background::IMAGE.width - @sfx_button.width - @mute_button.width - @fullscreen_button.width - 60, 20)
+		@sfx_button.warp(WIDTH - @sfx_button.width - @mute_button.width - @fullscreen_button.width - 60, 20)
 
 		if !@player.sfx?
 			@sfx_button.click
@@ -201,13 +203,13 @@ class Game < Gosu::Window
 			@foreground.move(@speed)
 			@background.move(@speed)
 
-			if @pipes.length == 0 || @pipes[-1][0].x < Background::IMAGE.width / 2
+			if @pipes.length == 0 || @pipes[-1][0].x < WIDTH / 2
 				new_down_pipe = Pipe.new("down")
 				new_up_pipe = Pipe.new("up")
-				gap_center = rand(100..(Background::IMAGE.height - 150))
+				gap_center = rand(100..(HEIGHT - 150))
 
-				new_down_pipe.warp(Background::IMAGE.width, gap_center - new_down_pipe.image.height - @gap_height/2)
-				new_up_pipe.warp(Background::IMAGE.width, gap_center + @gap_height/2)
+				new_down_pipe.warp(WIDTH, gap_center - new_down_pipe.image.height - @gap_height/2)
+				new_up_pipe.warp(WIDTH, gap_center + @gap_height/2)
 
 				@pipes << [new_down_pipe, new_up_pipe]
 			end
@@ -229,8 +231,8 @@ class Game < Gosu::Window
 		when :home_screen, :request_update
 			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("Average score: #{@player.average_score.round(2)}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@heading.draw_text("FLAPTUS", Background::IMAGE.width / 2 - 125, Background::IMAGE.height / 2 - 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@paragraph.draw_text("Click or press spacebar to play", Background::IMAGE.width / 2 - 175, Background::IMAGE.height / 2 + 35, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@heading.draw_text("FLAPTUS", WIDTH / 2 - 125, HEIGHT / 2 - 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@paragraph.draw_text("Click or press spacebar to play", WIDTH / 2 - 175, HEIGHT / 2 + 35, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 
 			@home_screen_buttons.each { |button| button.draw }
 
@@ -267,7 +269,7 @@ class Game < Gosu::Window
 			when :dying
 				@player.death_spin
 
-				if Background::IMAGE.height - @player.y <= 0
+				if HEIGHT - @player.y <= 0
 					@game_state = :home_screen
 					@speed = 1.0
 				end
