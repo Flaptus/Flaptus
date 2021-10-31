@@ -1,4 +1,4 @@
-VERSION   = "1.3.1"
+VERSION   = "1.4.1"
 ROOT_PATH = File.expand_path(".", __dir__)
 REPO_URL  = "https://github.com/Coding-Cactus/Flaptus"
 VOLUME    = 0.75
@@ -170,7 +170,7 @@ class Game < Gosu::Window
 				elsif @sfx_button.hover?
 					@sfx_button.click
 					@player.sfx = !@player.sfx?
-					
+
 				else
 					@game_state = :playing
 					@player.reset
