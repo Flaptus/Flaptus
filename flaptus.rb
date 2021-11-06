@@ -1,6 +1,6 @@
-VERSION   = "1.4.1"
+VERSION   = "1.4.2"
 ROOT_PATH = File.expand_path(".", __dir__)
-REPO_URL  = "https://github.com/Coding-Cactus/Flaptus"
+REPO_URL  = "https://github.com/Flaptus/Flaptus"
 VOLUME    = 0.75
 WIDTH     = 833
 HEIGHT    = 511
