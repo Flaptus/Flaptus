@@ -1,13 +1,16 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    date (3.2.0)
     gosu (1.2.0)
+    json (2.6.1)
     open-uri (0.2.0)
       stringio
       time
       uri
     stringio (3.0.0)
     time (0.1.0)
+      date
     uri (0.10.1)
     yaml (0.1.1)
 
@@ -17,6 +20,7 @@ PLATFORMS
 
 DEPENDENCIES
   gosu (~> 1.2)
+  json (~> 2.6)
   open-uri (~> 0.2)
   yaml (~> 0.1.1)
 

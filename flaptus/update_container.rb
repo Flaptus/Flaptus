@@ -7,12 +7,12 @@ class UpdateContainer
 
 		@x = @y = 0.0
 
-		@width = @background.width
+		@width  = @background.width
 		@height = @background.height
 
-		@big_text = Gosu::Font.new(60, name: "#{ROOT_PATH}/assets/fonts/Sniglet.ttf")
+		@big_text    = Gosu::Font.new(60, name: "#{ROOT_PATH}/assets/fonts/Sniglet.ttf")
 		@medium_text = Gosu::Font.new(43, name: "#{ROOT_PATH}/assets/fonts/Sniglet.ttf")
-		@small_text = Gosu::Font.new(35, name: "#{ROOT_PATH}/assets/fonts/Sniglet.ttf")
+		@small_text  = Gosu::Font.new(35, name: "#{ROOT_PATH}/assets/fonts/Sniglet.ttf")
 	end
 
 	def warp(x, y)
@@ -21,6 +21,7 @@ class UpdateContainer
 
 	def draw
 		@background.draw(@x, @y, ZOrder::UI)
+		
 		@big_text.draw_text("Update Detected!", @x + 10, @y + 20, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
 		@medium_text.draw_text("Current version: #{@current}", @x + 10, @y + 100, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
 		@medium_text.draw_text("Newer version: #{@new}", @x + 10, @y + 150, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)

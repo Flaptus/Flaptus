@@ -112,6 +112,61 @@ end
 
 
 
+class LeaderboardButton < Button
+	def initialize
+		super(
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/trophy.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/trophy_hover.png")
+		)
+	end
+end
+
+
+
+class CloseButton < Button
+	def initialize
+		super(
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/close.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/close_hover.png")
+		)
+	end
+end
+
+
+
+class LeftArrowButton < Button
+	def initialize
+		super(
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/left_arrow.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/left_arrow_hover.png")
+		)
+	end
+end
+
+
+
+class RightArrowButton < Button
+	def initialize
+		super(
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/right_arrow.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/right_arrow_hover.png")
+		)
+	end
+end
+
+
+
+class SignupButton < Button
+	def initialize
+		super(
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/signup.png"),
+			Gosu::Image.new("#{ROOT_PATH}/assets/images/signup_hover.png")
+		)
+	end
+end
+
+
+
 class YesButton < Button
 	def initialize
 		super(

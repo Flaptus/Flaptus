@@ -1,5 +1,5 @@
 class Player
-	attr_reader :x, :y, :width, :height, :score, :average_score, :high_score
+	attr_reader :x, :y, :width, :height, :score, :average_score, :high_score, :username, :token
 
 	def initialize
 		@die        = Gosu::Sample.new("#{ROOT_PATH}/assets/audio/die.wav")
@@ -13,13 +13,16 @@ class Player
 		@flapping  = 0
 
 		@x = @y = @vel_y = @angle = 0.0
+
+		@username, @token = get_login_data
 		@fullscreen, @sfx, @mute = get_preference_data
 		@high_score, @average_score, @num_runs = get_score_data
 	end
 
-	def sfx? = @sfx
-	def mute? = @mute
+	def sfx?        = @sfx
+	def mute?       = @mute
 	def fullscreen? = @fullscreen
+	def authed?     = @token != nil
 
 	def fullscreen=(fullscreen)
 		@fullscreen = fullscreen
@@ -33,6 +36,16 @@ class Player
 
 	def mute=(mute)
 		@mute = mute
+		save_data
+	end
+
+	def username=(username)
+		@username = username
+		save_data
+	end
+
+	def token=(token)
+		@token = token
 		save_data
 	end
 
@@ -104,6 +117,13 @@ class Player
 		[data[:fullscreen], data[:sfx], data[:mute]]
 	end
 
+	def get_login_data
+		return [nil, nil] unless File.file?("flaptus_data/login.yaml")
+
+		data = YAML.load_file("flaptus_data/login.yaml")
+		[data[:username], data[:token]]
+	end
+
 	def save_data
 		begin
 			File.open("flaptus_data/data.yaml")
@@ -111,19 +131,26 @@ class Player
 			Dir.mkdir("flaptus_data")
 		end
 
+		File.open("flaptus_data/login.yaml", "w") do |file|
+			file.write({
+				token:    @token,
+				username: @username
+			}.to_yaml)
+		end
+
 		File.open("flaptus_data/data.yaml", "w") do |file|
 			file.write({
-				high_score: @high_score,
-				average_score: @average_score,
-				num_runs: @num_runs
+				num_runs:      @num_runs,
+				high_score:    @high_score,
+				average_score: @average_score
 			}.to_yaml)
 		end
 
 		File.open("flaptus_data/preferences.yaml", "w") do |file|
 			file.write({
-				fullscreen: @fullscreen,
-				sfx: @sfx,
-				mute: @mute
+				sfx:        @sfx,
+				mute:       @mute,
+				fullscreen: @fullscreen
 			}.to_yaml)
 		end
 	end
