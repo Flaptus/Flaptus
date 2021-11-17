@@ -1,4 +1,4 @@
-VERSION   = "1.5.0"
+VERSION   = "1.5.1"
 ROOT_PATH = File.expand_path(".", __dir__)
 REPO_URL  = "https://github.com/Flaptus/Flaptus"
 VOLUME    = 0.75
@@ -11,7 +11,7 @@ require "json"
 require "open-uri"
 require "net/http"
 
-require_relative "#{ROOT_PATH}/flaptus/pipe.rb"
+require_relative "#{ROOT_PATH}/flaptus/rock.rb"
 require_relative "#{ROOT_PATH}/flaptus/floor.rb"
 require_relative "#{ROOT_PATH}/flaptus/player.rb"
 require_relative "#{ROOT_PATH}/flaptus/buttons.rb"
@@ -29,7 +29,7 @@ rescue Errno::ENOENT
 end
 
 module ZOrder
-	BACKGROUND, FOREGROUND, PIPES, FLOOR, PLAYER, UI = *0...6
+	BACKGROUND, FOREGROUND, ROCKS, FLOOR, PLAYER, UI = *0...6
 end
 
 
@@ -41,8 +41,8 @@ class Game < Gosu::Window
 
 
 		@speed        = 1.0
-		@pipes        = []
-		@next_pipe    = 0
+		@rocks        = []
+		@next_rock    = 0
 		@text_input   = nil
 		@gap_height   = 150
 		@game_state   = :home_screen
@@ -275,7 +275,7 @@ class Game < Gosu::Window
 					@submit_button.warp(WIDTH - 20 - @submit_button.width, 120 + @username_field.height)
 
 				else
-					@pipes      = []
+					@rocks      = []
 					@game_state = :playing
 					@player.reset
 
@@ -285,8 +285,8 @@ class Game < Gosu::Window
 			end
 
 		when :playing
-			pipes_within_x = @pipes[0..1].select { |pair| pair[0].within_x?(@player) }
-			not_within_gap = pipes_within_x.length == 1 ? !pipes_within_x[0][0].within_gap_y?(@player, @gap_height) : false
+			rocks_within_x = @rocks[0..1].select { |pair| pair[0].within_x?(@player) }
+			not_within_gap = rocks_within_x.length == 1 ? !rocks_within_x[0][0].within_gap_y?(@player, @gap_height) : false
 
 			if @player.y + @player.height >= @floor.y || not_within_gap
 				@game_state = :start_death
@@ -317,19 +317,19 @@ class Game < Gosu::Window
 
 			@player.move
 
-			if @pipes.length == 0 || @pipes[-1][0].x < WIDTH / 2
-				new_up_pipe   = Pipe.new("up")
-				new_down_pipe = Pipe.new("down")
+			if @rocks.length == 0 || @rocks[-1][0].x < WIDTH / 2
+				new_up_rock   = Rock.new("up")
+				new_down_rock = Rock.new("down")
 				gap_center    = rand(100..(HEIGHT - 150))
 
-				new_down_pipe.warp(WIDTH, gap_center - new_down_pipe.image.height - @gap_height/2)
-				new_up_pipe.warp(WIDTH,   gap_center + @gap_height/2)
+				new_down_rock.warp(WIDTH, gap_center - new_down_rock.image.height - @gap_height/2)
+				new_up_rock.warp(WIDTH,   gap_center + @gap_height/2)
 
-				@pipes << [new_down_pipe, new_up_pipe]
+				@rocks << [new_down_rock, new_up_rock]
 			end
 
-			@pipes.reject! { |pair| pair[0].x + pair[0].width <= 0 }
-			@pipes.each do |pair|
+			@rocks.reject! { |pair| pair[0].x + pair[0].width <= 0 }
+			@rocks.each do |pair|
 				pair[0].move(@speed)
 				pair[1].move(@speed)
 				if @player.x > pair[0].x + pair[0].width && !pair[0].passed_player
@@ -393,7 +393,7 @@ class Game < Gosu::Window
 			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
 
-			@pipes.each do |pair|
+			@rocks.each do |pair|
 				pair[0].draw
 				pair[1].draw
 			end

@@ -1,4 +1,4 @@
-class Pipe
+class Rock
 	attr_reader :image, :x, :width
 	attr_accessor :passed_player
 
@@ -22,7 +22,7 @@ class Pipe
 		object_left = object.x
 		object_right = object.x + object.width
 
-		(object_left > @x && object_left < @x + @width) || (object_right > @x && object_right < @x + @width)
+		(object_left > @x + @width*0.2 && object_left < @x + @width*0.8) || (object_right > @x + @width*0.2 && object_right < @x + @width*0.8)
 	end
 
 	def within_gap_y?(object, gap_height)
@@ -33,6 +33,6 @@ class Pipe
 	end
 
 	def draw
-		@image.draw(@x, @y, ZOrder::PIPES)
+		@image.draw(@x, @y, ZOrder::ROCKS)
 	end
 end
