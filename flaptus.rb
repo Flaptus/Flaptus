@@ -217,6 +217,7 @@ class Game < Gosu::Window
 
 		when :signup
 			@submit_button.check_hover(self.mouse_x, self.mouse_y)
+			@cancel_button.check_hover(self.mouse_x, self.mouse_y)
 
 			if Gosu.button_down?(Gosu::MS_LEFT) && @key_released
 				@key_released = false
@@ -251,6 +252,9 @@ class Game < Gosu::Window
 							@signup_error = r.body
 						end
 					end
+				elsif @cancel_button.hover?
+					@game_state   = :home_screen
+					@signup_error = nil
 				end
 			elsif !(Gosu.button_down?(Gosu::KB_SPACE) || Gosu.button_down?(Gosu::MS_LEFT))
 				@key_released = true
@@ -305,14 +309,16 @@ class Game < Gosu::Window
 					@game_state = :leaderboard
 					@leaderboard.open
 
-				elsif @internet_connection && !@player.authed? && @signup_button.hover?
+				elsif @signup_button != nil && @internet_connection && !@player.authed? && @signup_button.hover?
 					@game_state = :signup
 
 					@username_field = TextBox.new(self, placeholder: "Username")
-					@username_field.warp(WIDTH - 20 - @username_field.width, 100)
 
-					@submit_button = SignupButton.new
-					@submit_button.warp(WIDTH - 20 - @submit_button.width, 120 + @username_field.height)
+					@submit_button = TextButton.new("Submit", 32)
+					@submit_button.width = @username_field.width
+
+					@cancel_button = TextButton.new("Cancel", 32)
+					@cancel_button.width = @username_field.width
 				
 				elsif @quit_button.hover?
 					close
@@ -430,20 +436,18 @@ class Game < Gosu::Window
 				Gosu::Color.argb(THEME_COLOUR)
 			)
 
-			logged_in = @internet_connection && @player.authed?
-			login_text = logged_in ? @player.username : "Offline"
-			login_x = (WIDTH - @score_text.text_width(login_text)) / 2
+			if @game_state != :signup
+				logged_in = @internet_connection && @player.authed?
+				login_text = logged_in ? @player.username : "Offline"
+				login_x = (WIDTH - @score_text.text_width(login_text)) / 2
+	
+				@score_text.draw_text(
+					login_text,
+					login_x, 205, ZOrder::UI,
+					1.0, 1.0,
+					Gosu::Color.argb(THEME_COLOUR)
+				)
 
-			@score_text.draw_text(
-				login_text,
-				login_x, 205, ZOrder::UI,
-				1.0, 1.0,
-				Gosu::Color.argb(THEME_COLOUR)
-			)
-
-			if @game_state == :signup && false # TEMP FIXME
-				@home_screen_buttons.reject { |button| button == @signup_button }.each { |button| button.draw }
-			else
 				@home_screen_buttons.each { |button| button.draw }
 			end
 
@@ -454,14 +458,40 @@ class Game < Gosu::Window
 				@yes_update.draw
 
 			when :signup
-				if @signup_error
-					@submit_button.warp(WIDTH - 20 - @submit_button.width, 110 + @username_field.height + @paragraph.height)
-					@paragraph.draw_text(@signup_error,  WIDTH - @paragraph.text_width(@signup_error) - 20, 140, ZOrder::UI, 1.0, 1.0, Gosu::Color::RED)
-				end
+				stux = (WIDTH - @score_text.text_width("Sign up")) / 2
+				@score_text.draw_text(
+					"Sign up",
+					stux, 205, ZOrder::UI,
+					1.0, 1.0,
+					Gosu::Color.argb(THEME_COLOUR)
+				)
 
-				@username_field.warp(WIDTH - 20 - @username_field.width, 100)
+				common_x = (WIDTH - @username_field.width) / 2
+
+				@username_field.warp(common_x, 250)
 				@username_field.draw
+
+				offset_x = common_x + @username_field.width / 2 + 8
+				button_w = @username_field.width / 2 - 4
+
+				@submit_button.width = button_w
+				@submit_button.warp(common_x, 258 + @username_field.height)
 				@submit_button.draw
+
+				@cancel_button.width = button_w
+				@cancel_button.warp(offset_x, 258 + @username_field.height)
+				@cancel_button.draw
+
+				if @signup_error
+					@paragraph.draw_text(
+						@signup_error,
+						(WIDTH - @paragraph.text_width(@signup_error)) / 2,
+						266 + @username_field.height + @submit_button.height,
+						ZOrder::UI,
+						1.0, 1.0,
+						Gosu::Color::RED
+					)
+				end
 
 			when :leaderboard
 				@scrim.draw
