@@ -10,9 +10,9 @@ class UpdateContainer
 		@width  = @background.width
 		@height = @background.height
 
-		@big_text    = Gosu::Font.new(60, name: "#{ROOT_PATH}/assets/fonts/Sniglet.ttf")
-		@medium_text = Gosu::Font.new(43, name: "#{ROOT_PATH}/assets/fonts/Sniglet.ttf")
-		@small_text  = Gosu::Font.new(35, name: "#{ROOT_PATH}/assets/fonts/Sniglet.ttf")
+		@big_text    = Gosu::Font.new(60, name: "#{ROOT_PATH}/assets/fonts/Dosis.ttf")
+		@medium_text = Gosu::Font.new(43, name: "#{ROOT_PATH}/assets/fonts/Dosis.ttf")
+		@small_text  = Gosu::Font.new(35, name: "#{ROOT_PATH}/assets/fonts/Dosis.ttf")
 	end
 
 	def warp(x, y)
