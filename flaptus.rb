@@ -62,8 +62,10 @@ class Game < Gosu::Window
 		@background_music.volume = VOLUME
 
 		@heading    = Gosu::Font.new(100, name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
-		@paragraph  = Gosu::Font.new(30,  name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
-		@score_text = Gosu::Font.new(45,  name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
+		@subheading = Gosu::Font.new(25,  name: "#{ROOT_PATH}/assets/fonts/Jumpman.ttf")
+
+		@paragraph  = Gosu::Font.new(30,  name: "#{ROOT_PATH}/assets/fonts/Dosis.ttf")
+		@score_text = Gosu::Font.new(30,  name: "#{ROOT_PATH}/assets/fonts/Dosis.ttf")
 
 
 		@floor = Floor.new
@@ -103,6 +105,7 @@ class Game < Gosu::Window
 
 
 		@fullscreen_button = FullScreenButton.new
+		@fullscreen_button.resize(50, 50)
 		@fullscreen_button.warp(WIDTH - @fullscreen_button.width - 20, 20)
 
 		if @player.fullscreen?
@@ -111,6 +114,7 @@ class Game < Gosu::Window
 		end
 
 		@mute_button = MuteButton.new
+		@mute_button.resize(50, 50)
 		@mute_button.warp(WIDTH - @mute_button.width - @fullscreen_button.width - 40, 20)
 
 		if @player.mute?
@@ -119,6 +123,7 @@ class Game < Gosu::Window
 		end
 
 		@sfx_button = SfxButton.new
+		@sfx_button.resize(50, 50)
 		@sfx_button.warp(WIDTH - @sfx_button.width - @mute_button.width - @fullscreen_button.width - 60, 20)
 
 		if !@player.sfx?
@@ -131,19 +136,23 @@ class Game < Gosu::Window
 			@sfx_button
 		]
 
+		@quit_button = TextButton.new("Quit", 32)
+		@button_stack = [
+			TextButton.new("Play", 32),
+			@quit_button
+		]
+
 		if @internet_connection
-			if !@player.authed?
-				@signup_button = SignupButton.new
-				@signup_button.warp(WIDTH - 20 - @signup_button.width, 100)
-				@home_screen_buttons << @signup_button
+			if !@player.authed? && !!SECRET
+				@signup_button = TextButton.new("Sign up", 32)
+				@button_stack.push(@signup_button) # :'(
 			end
+
+			@leaderboard_button = TextButton.new("Leaderboard", 32)
+			@button_stack.insert(1, @leaderboard_button)
 
 			@leaderboard = Leaderboard.new
 			@leaderboard.warp((WIDTH - @leaderboard.width) / 2.0, (HEIGHT - @leaderboard.height) / 2.0)
-
-
-			@leaderboard_button = LeaderboardButton.new
-			@leaderboard_button.warp(WIDTH - @leaderboard_button.width - @sfx_button.width - @mute_button.width - @fullscreen_button.width - 80, 20)
 
 			@leaderboard_close_button = CloseButton.new
 			@leaderboard_close_button.warp(@leaderboard.width + (WIDTH - @leaderboard.width)/2.0 - @leaderboard_close_button.width - 10, (HEIGHT - @leaderboard.height)/2.0 + 10)
@@ -159,10 +168,20 @@ class Game < Gosu::Window
 				@leaderboard.x + @leaderboard.width/2.0 + @leaderboard.page_text_width/2.0 + 10,
 				@leaderboard.y + @leaderboard.height - @leaderboard_right_button.height - 10
 			)
-
-			@home_screen_buttons << @leaderboard_button
 		end
 
+		stack_width = @button_stack.collect {|button| button.width}.max + 32
+		stack_x = (WIDTH - stack_width) / 2
+		stack_y = 250
+
+		for button in @button_stack
+			button.width = stack_width
+			button.warp(stack_x, stack_y)
+
+			stack_y += button.height + 8
+		end
+
+		@home_screen_buttons += @button_stack
 
 		@background_music.play(true)
 	end
@@ -291,6 +310,9 @@ class Game < Gosu::Window
 
 					@submit_button = SignupButton.new
 					@submit_button.warp(WIDTH - 20 - @submit_button.width, 120 + @username_field.height)
+				
+				elsif @quit_button.hover?
+					close
 
 				else
 					@rocks      = []
@@ -377,18 +399,46 @@ class Game < Gosu::Window
 	def draw
 		case @game_state
 		when :home_screen, :request_update, :signup, :leaderboard
-			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(TEXT_COLOUR))
-			@score_text.draw_text("Average score: #{@player.average_score.round(2)}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(TEXT_COLOUR))
+			@score_text.draw_text(
+				"High score: #{@player.high_score}",
+				15, 15, ZOrder::UI,
+				1.0, 1.0,
+				Gosu::Color.argb(TEXT_COLOUR)
+			)
+			@score_text.draw_text(
+				"Average score: #{@player.average_score.round(2)}",
+				15, 45, ZOrder::UI,
+				1.0, 1.0,
+				Gosu::Color.argb(TEXT_COLOUR)
+			)
 
-			@heading.draw_text("FLAPTUS", WIDTH / 2 - 125, HEIGHT / 2 - 50, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(THEME_COLOUR))
-			@paragraph.draw_text("Click or press spacebar to play", WIDTH / 2 - 175, HEIGHT / 2 + 35, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(THEME_COLOUR))
+			heading_x = (WIDTH - @heading.text_width("FLAPTUS")) / 2
 
-			if @internet_connection && @player.authed?
-				text = @player.username
-				@score_text.draw_text(text, WIDTH - @score_text.text_width(text) - 20, 100, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(THEME_COLOUR))
-			end
+			@heading.draw_text(
+				"FLAPTUS",
+				heading_x, 105, ZOrder::UI,
+				1.0, 1.0,
+				Gosu::Color.argb(THEME_COLOUR)
+			)
+			@subheading.draw_text(
+				"CODINGCACTUS'S",
+				heading_x, 95, ZOrder::UI,
+				1.0, 1.0,
+				Gosu::Color.argb(THEME_COLOUR)
+			)
 
-			if @game_state == :signup
+			logged_in = @internet_connection && @player.authed?
+			login_text = logged_in ? @player.username : "Offline"
+			login_x = (WIDTH - @score_text.text_width(login_text)) / 2
+
+			@score_text.draw_text(
+				login_text,
+				login_x, 205, ZOrder::UI,
+				1.0, 1.0,
+				Gosu::Color.argb(THEME_COLOUR)
+			)
+
+			if @game_state == :signup && false # TEMP FIXME
 				@home_screen_buttons.reject { |button| button == @signup_button }.each { |button| button.draw }
 			else
 				@home_screen_buttons.each { |button| button.draw }
