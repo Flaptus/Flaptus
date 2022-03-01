@@ -5,6 +5,16 @@ VOLUME    = 0.75
 WIDTH     = 833
 HEIGHT    = 511
 
+THEME_COLOUR = 0xff_2d832d
+TEXT_COLOUR  = 0xff_eeffee
+
+# builds: replace this with the secret value
+SECRET    = ENV["SECRET"]
+
+if !SECRET
+	puts "No secret environment variable found, this will break the leaderboard functionality."
+end
+
 require "gosu"
 require "yaml"
 require "json"
@@ -194,14 +204,22 @@ class Game < Gosu::Window
 
 				if @submit_button.hover?
 					Thread.new do
-						r = Net::HTTP.post_form(
-							URI.parse("https://leaderboard.flaptus.com/api/newuser"),
-							{
-								secret:   SECRET,
-								username: @username_field.text
-							}
-						)
-						if r.code == "200"
+						res_code = nil
+
+						begin
+							r = Net::HTTP.post_form(
+								URI.parse("https://leaderboard.flaptus.com/api/newuser"),
+								{
+									secret:   SECRET,
+									username: @username_field.text
+								}
+							)
+
+							res_code = r.code
+						rescue
+						end
+
+						if res_code == "200"
 							@game_state      = :home_screen
 							@player.token    = r.body
 							@player.username = @username_field.text
@@ -293,16 +311,25 @@ class Game < Gosu::Window
 
 				if @internet_connection && @player.authed?
 					Thread.new do
-						r = Net::HTTP.post_form(
-							URI.parse("https://leaderboard.flaptus.com/api/newscore"),
-							{
-								secret: SECRET,
-								token:  @player.token,
-								score:  @player.score
-							}
-						)
-						if r.code != "200"
-							close
+						res_code = nil
+
+						begin
+							r = Net::HTTP.post_form(
+								URI.parse("https://leaderboard.flaptus.com/api/newscore"),
+								{
+									secret: SECRET,
+									token:  @player.token,
+									score:  @player.score
+								}
+							)
+
+							res_code = r.code
+						rescue
+						end
+
+						if res_code != "200"
+							puts "Server returned error on score submission"
+							#close
 						end
 					end
 				end
@@ -350,14 +377,15 @@ class Game < Gosu::Window
 	def draw
 		case @game_state
 		when :home_screen, :request_update, :signup, :leaderboard
-			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@score_text.draw_text("Average score: #{@player.average_score.round(2)}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@heading.draw_text("FLAPTUS", WIDTH / 2 - 125, HEIGHT / 2 - 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@paragraph.draw_text("Click or press spacebar to play", WIDTH / 2 - 175, HEIGHT / 2 + 35, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(TEXT_COLOUR))
+			@score_text.draw_text("Average score: #{@player.average_score.round(2)}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(TEXT_COLOUR))
+
+			@heading.draw_text("FLAPTUS", WIDTH / 2 - 125, HEIGHT / 2 - 50, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(THEME_COLOUR))
+			@paragraph.draw_text("Click or press spacebar to play", WIDTH / 2 - 175, HEIGHT / 2 + 35, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(THEME_COLOUR))
 
 			if @internet_connection && @player.authed?
 				text = @player.username
-				@score_text.draw_text(text, WIDTH - @score_text.text_width(text) - 20, 100, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+				@score_text.draw_text(text, WIDTH - @score_text.text_width(text) - 20, 100, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(THEME_COLOUR))
 			end
 
 			if @game_state == :signup
@@ -390,8 +418,8 @@ class Game < Gosu::Window
 			end
 
 		when :playing, :start_death, :dying
-			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
-			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
+			@score_text.draw_text("High score: #{@player.high_score}", 15, 15, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(TEXT_COLOUR))
+			@score_text.draw_text("Current score: #{@player.score}", 15, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color.argb(TEXT_COLOUR))
 
 			@rocks.each do |pair|
 				pair[0].draw
