@@ -22,6 +22,7 @@ require "open-uri"
 require "net/http"
 
 require_relative "#{ROOT_PATH}/flaptus/rock.rb"
+require_relative "#{ROOT_PATH}/flaptus/scrim.rb"
 require_relative "#{ROOT_PATH}/flaptus/floor.rb"
 require_relative "#{ROOT_PATH}/flaptus/player.rb"
 require_relative "#{ROOT_PATH}/flaptus/buttons.rb"
@@ -73,6 +74,8 @@ class Game < Gosu::Window
 
 		@foreground = Foreground.new
 		@background = Background.new
+		
+		@scrim = Scrim.new
 
 		@player = Player.new
 		@player.reset
@@ -461,6 +464,7 @@ class Game < Gosu::Window
 				@submit_button.draw
 
 			when :leaderboard
+				@scrim.draw
 				@leaderboard.draw
 				@leaderboard_close_button.draw
 				@leaderboard_left_button.draw
