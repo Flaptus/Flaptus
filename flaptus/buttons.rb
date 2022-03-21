@@ -1,5 +1,10 @@
+BUTTON_TEXT_COLOUR = 0xff_eeffee
+BUTTON_LIFT_COLOUR = 0xff_2d832d
+BUTTON_SCIM_COLOUR = 0x22_2d832d
+
 class Button
 	attr_reader :width, :height
+	#attr_writer :width, :height
 
 	def initialize(base_image, hover_image=base_image)
 		@base_image, @hover_image = base_image, hover_image
@@ -15,6 +20,10 @@ class Button
 		@x, @y = x, y
 	end
 
+	def resize(w, h)
+		@width, @height = w, h
+	end
+
 	def check_hover(mouse_x, mouse_y)
 		@hover = @y < mouse_y && @y + @height > mouse_y && @x < mouse_x && @x + @width > mouse_x
 		@hover
@@ -25,13 +34,122 @@ class Button
 	def click; end
 
 	def draw
-		(@hover ? @hover_image : @base_image).draw(@x, @y, ZOrder::UI)
+		image = @hover ? @hover_image : @base_image
+
+		image.draw_as_quad(
+			@x,          @y,           Gosu::Color.argb(0xffffffff),
+			@x + @width, @y,           Gosu::Color.argb(0xffffffff),
+			@x + @width, @y + @height, Gosu::Color.argb(0xffffffff),
+			@x,          @y + @height, Gosu::Color.argb(0xffffffff),
+			ZOrder::UI
+		)
 	end
 
 	private
 
 	def change_images(base_image, hover_image)
 		@base_image, @hover_image = base_image, hover_image
+	end
+end
+
+
+
+class TextButton
+	attr_reader :width, :height
+
+	def initialize(text, size=24)
+		@text = text
+
+		@font = Gosu::Font.new(size, name: "#{ROOT_PATH}/assets/fonts/Dosis.ttf")
+
+		@x = @y = 0.0
+
+		@min_width = @font.text_width(text) + 8
+		@width = @min_width
+		@height = size + 8
+
+		@hover = false
+	end
+
+	def width=(new_width)
+		@width = new_width > @min_width ? new_width : @min_width
+	end
+
+	def warp(x, y)
+		@x, @y = x, y
+	end
+
+	def check_hover(mouse_x, mouse_y)
+		@x_collide = @x < mouse_x && @x + @width > mouse_x
+		@y_collide = @y < mouse_y && @y + @height > mouse_y
+		@hover = @x_collide && @y_collide
+		@hover
+	end
+
+	def hover? = @hover
+
+	def click; end
+
+	def draw
+		left_pad = (@width - @min_width + 8) / 2
+
+		if @hover
+			Gosu::draw_quad(
+				@x,          @y,           Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				@x + @width, @y,           Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				@x + @width, @y + @height, Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				@x,          @y + @height, Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				ZOrder::UI
+			)
+
+			@font.draw_text(
+				@text,
+				@x + left_pad, @y + 4,
+				ZOrder::UI,
+				1, 1,
+				BUTTON_TEXT_COLOUR
+			)
+		else
+			Gosu::draw_quad(
+				@x,          @y,           Gosu::Color.argb(BUTTON_SCIM_COLOUR),
+				@x + @width, @y,           Gosu::Color.argb(BUTTON_SCIM_COLOUR),
+				@x + @width, @y + @height, Gosu::Color.argb(BUTTON_SCIM_COLOUR),
+				@x,          @y + @height, Gosu::Color.argb(BUTTON_SCIM_COLOUR),
+				ZOrder::UI
+			)
+
+			Gosu::draw_line(
+				@x,          @y, Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				@x + @width, @y, Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				ZOrder::UI
+			)
+
+			Gosu::draw_line(
+				@x + @width, @y,           Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				@x + @width, @y + @height, Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				ZOrder::UI
+			)
+
+			Gosu::draw_line(
+				@x + @width, @y + @height, Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				@x,          @y + @height, Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				ZOrder::UI
+			)
+
+			Gosu::draw_line(
+				@x, @y + @height, Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				@x, @y,           Gosu::Color.argb(BUTTON_LIFT_COLOUR),
+				ZOrder::UI
+			)
+
+			@font.draw_text(
+				@text,
+				@x + left_pad, @y + 4,
+				ZOrder::UI,
+				1, 1,
+				BUTTON_LIFT_COLOUR
+			)
+		end
 	end
 end
 

@@ -1,12 +1,12 @@
 class TextBox < Gosu::TextInput
 	WIDTH                = 240
-	PADDING              = 5
+	PADDING              = 4
 	CARET_COLOUR         = 0xffffffff
-	ACTIVE_COLOUR        = 0xff33ff33
-	INACTIVE_COLOUR      = 0xcc666666
-	SELECTION_COLOUR     = 0xcc0000ff
-	ACTIVE_TEXT_COLOUR   = 0xffffffff
-	INACTIVE_TEXT_COLOUR = 0xffcccccc
+	ACTIVE_COLOUR        = 0xff_2d832d
+	INACTIVE_COLOUR      = 0x22_2d832d
+	SELECTION_COLOUR     = 0xcc_0022dd
+	ACTIVE_TEXT_COLOUR   = 0xff_eeffee
+	INACTIVE_TEXT_COLOUR = 0xff_2d832d
 
 	attr_reader :x, :y
 
@@ -16,7 +16,7 @@ class TextBox < Gosu::TextInput
 		@x = @y = 0.0
 		@window, @placeholder = window, placeholder
 
-		@font = Gosu::Font.new(35, name: Gosu::default_font_name)
+		@font = Gosu::Font.new(30, name: "#{ROOT_PATH}/assets/fonts/Dosis.ttf")
 
 	end
 
@@ -29,38 +29,72 @@ class TextBox < Gosu::TextInput
 	end
 
 	def draw
+		ex = @x + PADDING
+		ey = @y + PADDING
+
+		ewidth  = width - PADDING
+		eheight = height - PADDING * 2
+
+		if @window.text_input != self
+			bwidth = width + PADDING
+			
+			Gosu::draw_line(
+				@x,          @y, Gosu::Color.argb(ACTIVE_COLOUR),
+				@x + bwidth, @y, Gosu::Color.argb(ACTIVE_COLOUR),
+				ZOrder::UI
+			)
+
+			Gosu::draw_line(
+				@x + bwidth, @y,          Gosu::Color.argb(ACTIVE_COLOUR),
+				@x + bwidth, @y + height, Gosu::Color.argb(ACTIVE_COLOUR),
+				ZOrder::UI
+			)
+
+			Gosu::draw_line(
+				@x + bwidth, @y + height, Gosu::Color.argb(ACTIVE_COLOUR),
+				@x,          @y + height, Gosu::Color.argb(ACTIVE_COLOUR),
+				ZOrder::UI
+			)
+
+			Gosu::draw_line(
+				@x, @y + height, Gosu::Color.argb(ACTIVE_COLOUR),
+				@x, @y,          Gosu::Color.argb(ACTIVE_COLOUR),
+				ZOrder::UI
+			)
+		end
+
 		background_colour = @window.text_input == self ? ACTIVE_COLOUR : INACTIVE_COLOUR
 		font_colour = @window.text_input == self ? ACTIVE_TEXT_COLOUR : INACTIVE_TEXT_COLOUR
 
 		Gosu.draw_quad(
-			x - PADDING,         y - PADDING,          background_colour,
-			x + width + PADDING, y - PADDING,          background_colour,
-			x - PADDING,         y + height + PADDING, background_colour,
-			x + width + PADDING, y + height + PADDING, background_colour, ZOrder::UI
+			ex - PADDING,          ey - PADDING,           background_colour,
+			ex + ewidth + PADDING, ey - PADDING,           background_colour,
+			ex - PADDING,          ey + eheight + PADDING, background_colour,
+			ex + ewidth + PADDING, ey + eheight + PADDING, background_colour, ZOrder::UI
 		)
 
-		pos_x = x + @font.text_width(self.text[0...self.caret_pos])
-		sel_x = x + @font.text_width(self.text[0...self.selection_start])
+		pos_x = ex + @font.text_width(self.text[0...self.caret_pos])
+		sel_x = ex + @font.text_width(self.text[0...self.selection_start])
 
 		Gosu.draw_quad(
-			sel_x, y,          SELECTION_COLOUR,
-			pos_x, y,          SELECTION_COLOUR,
-			sel_x, y + height, SELECTION_COLOUR,
-			pos_x, y + height, SELECTION_COLOUR, ZOrder::UI
+			sel_x, ey,           SELECTION_COLOUR,
+			pos_x, ey,           SELECTION_COLOUR,
+			sel_x, ey + eheight, SELECTION_COLOUR,
+			pos_x, ey + eheight, SELECTION_COLOUR, ZOrder::UI
 		)
 
 		if @window.text_input == self
 			Gosu.draw_line(
-				pos_x, y,          CARET_COLOUR,
-				pos_x, y + height, CARET_COLOUR, ZOrder::UI
+				pos_x, ey,           CARET_COLOUR,
+				pos_x, ey + eheight, CARET_COLOUR, ZOrder::UI
 			)
 		end
 
 		txt = (@window.text_input == self && self.text != "") || self.text != "" ? self.text : @placeholder
-		@font.draw_text(txt, x, y, ZOrder::UI, 1.0, 1.0, font_colour)
+		@font.draw_text(txt, ex, ey, ZOrder::UI, 1.0, 1.0, font_colour)
 	end
 
-	def height = @font.height
+	def height = @font.height + 8
 	def width  = WIDTH > @font.text_width(self.text) ? WIDTH : @font.text_width(self.text)
 
 	def hover?(mouse_x, mouse_y)

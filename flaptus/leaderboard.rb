@@ -7,6 +7,9 @@ class Leaderboard
 	def initialize
 		@background = Gosu::Image.new("#{ROOT_PATH}/assets/images/leaderboard.png")
 
+		@flaptus_down = Gosu::Image.new("#{ROOT_PATH}/assets/images/flaptus.png")
+		@flaptus_flap = Gosu::Image.new("#{ROOT_PATH}/assets/images/flaptus_flap.png")
+
 		@x = @y = 0.0
 
 		@width  = @background.width
@@ -59,6 +62,19 @@ class Leaderboard
 			@small_font.draw_text("#{index+1 + PAGE_LENGTH*(@page-1)}.",     @x + padding_left + (COLUMN_WIDTH - @small_font.text_width("#{index+1}.")) / 2.0,                     @y + padding_top + @small_font.height * index, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
 			@small_font.draw_text(score["username"], @x + padding_left + COLUMN_WIDTH + (COLUMN_WIDTH - @small_font.text_width(score["username"])) / 2.0,  @y + padding_top + @small_font.height * index, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
 			@small_font.draw_text(score["score"],    @x + padding_left + COLUMN_WIDTH * 2 + (COLUMN_WIDTH - @small_font.text_width(score["score"])) / 2.0, @y + padding_top + @small_font.height * index, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+		end
+
+		if @scores == []
+			t = Gosu::milliseconds / 200.0
+			yoff = Math.sin(t + 1) * 10
+
+			part = t % (Math::PI * 2) < Math::PI
+			image = part ? @flaptus_flap : @flaptus_down
+
+			x = (WIDTH - image.width) / 2
+			y = (HEIGHT - image.height) / 2 + yoff
+
+			image.draw(x, y, ZOrder::UI)
 		end
 
 		@page_font.draw_text(page_text, @x + @width/2.0 - page_text_width/2.0, @y + @height - @page_font.height - 10, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
